@@ -5,6 +5,13 @@ pipeline {
         SONAR_HOST_URL = 'http://localhost:9000/'
     }
 
+
+
+
+
+
+
+
     stages {
         stage('Checkout') {
             steps {
@@ -32,37 +39,39 @@ pipeline {
             steps {
                 echo 'Running SonarQube analysis...'
                 script {
-                    withSonarQubeEnv('sonar') {
-                        bat './gradlew sonarqube'
-                    }
+
+
+                       withSonarQubeEnv('sonar') {
+                                          bat './gradlew sonar'
+                                      }
+
                 }
             }
         }
+ stage('Code Quality') {
+     steps {
+         echo 'Checking SonarQube Quality Gates...'
+         script {
+             try {
+                 timeout(time: 3, unit: 'MINUTES') { // Adjust as necessary
+                     def qg = waitForQualityGate()
 
-        stage('Code Quality') {
-            steps {
-                echo 'Checking SonarQube Quality Gates...'
-                script {
-                    try {
-                        timeout(time: 3, unit: 'MINUTES') { // Adjust timeout as necessary
-                            def qg = waitForQualityGate()
-                            if (qg.status == 'OK') {
-                                echo "Quality Gates passed: ${qg.status}"
-                            } else {
-                                echo "Quality Gates failed: ${qg.status}"
-                                currentBuild.result = 'FAILURE'
-                                error("Quality Gates failed. Stopping pipeline.")
-                            }
-                        }
-                    } catch (Exception e) {
-                        echo "Quality Gates check failed: ${e.message}"
-                        currentBuild.result = 'FAILURE'
-                        error("Quality Gates check failed")
-                    }
-                }
-            }
-        }
-
+                     if (qg.status != 'OK') {
+                         echo "Quality Gates failed: ${qg.status}"
+                         currentBuild.result = 'FAILURE'
+                         error("Quality Gates failed. Stopping pipeline.")
+                     } else {
+                         echo "Quality Gates passed: ${qg.status}"
+                     }
+                 }
+             } catch (Exception e) {
+                 echo "Quality Gates check failed: ${e.message}"
+                 currentBuild.result = 'FAILURE'
+                 error("Quality Gates check failed")
+             }
+         }
+     }
+ }
         stage('Build') {
             steps {
                 echo 'Building the project...'
@@ -79,17 +88,17 @@ pipeline {
             }
         }
 
-        stage('Deploy') {
+        stage('Deployy') {
             steps {
                 echo 'Deploying to MyMavenRepo...'
-                bat './gradlew publish'
+                bat "./gradlew publish"
             }
         }
 
         stage('Send Notification') {
             steps {
                 script {
-                    def result = currentBuild.result ?: 'SUCCESS'
+                    def result = currentBuild.result
                     if (result == 'SUCCESS') {
                         mail to: 'lm_djabri@esi.dz',
                              subject: "Jenkins Build #${env.BUILD_NUMBER} Success",
