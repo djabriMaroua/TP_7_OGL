@@ -39,7 +39,7 @@ pipeline {
                 script {
 
                     try {
-                        bat "./gradlew sonar -Dsonar.host.url=${SONAR_HOST_URL}"
+                        bat "./gradlew sonar}"
                     } catch (Exception e) {
                         echo "SonarQube analysis failed: ${e.message}"
                         currentBuild.result = 'FAILURE'

@@ -18,6 +18,8 @@ apply plugin: 'maven-publish'
 group = 'com.my-project'
 version = '0.1-SNAPSHOT'
 
+
+
 publishing {
     repositories {
         maven {
