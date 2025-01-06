@@ -41,9 +41,9 @@ pipeline {
                 script {
 
 
-                        withSonarQubeEnv('sonar') {
-                                    bat './gradlew sonar --stacktrace'
-                                  }
+                       withSonarQubeEnv('sonar') {
+                                          bat './gradlew sonar'
+                                      }
 
                 }
             }
