@@ -55,7 +55,7 @@ pipeline {
              try {
                  timeout(time: 3, unit: 'MINUTES') { // Adjust as necessary
                      def qg = waitForQualityGate()
-                     echo "Quality Gates failed: ${qg}"
+                     echo "$$$$$$$: ${qg}"
                      if (qg.status != 'OK') {
                          echo "Quality Gates failed: ${qg.status}"
                          currentBuild.result = 'FAILURE'
