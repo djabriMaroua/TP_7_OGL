@@ -34,7 +34,7 @@ pipeline {
                 script {
 
                     try {
-                        bat "./gradlew sonar}"
+                        bat "./gradlew sonar"
                     } catch (Exception e) {
                         echo "SonarQube analysis failed: ${e.message}"
                         currentBuild.result = 'FAILURE'
