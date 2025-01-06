@@ -6,9 +6,7 @@ plugins {
     id("com.github.spacialcircumstances.gradle-cucumber-reporting") version "0.1.25"
     id("io.github.oleksiiparf.slack-webhook") version "1.0.0"
     id("de.zebrajaeger.sendMail") version "0.2.2"
-    id ("org.sonarqube") version "6.0.1.5171"
-
-
+    id("org.sonarqube") version "6.0.1.5171"
 }
 
 group = 'com.example'
@@ -21,10 +19,10 @@ version = '0.1-SNAPSHOT'
 publishing {
     repositories {
         maven {
-            url 'https://mymavenrepo.com/repo/uW1ml5rCuyPDeACXAsO1/'
+            url = 'https://mymavenrepo.com/repo/uW1ml5rCuyPDeACXAsO1/'
             credentials {
-                username 'myMavenRepo'
-                password 'myMavenRepo'
+                username = 'myMavenRepo'
+                password = 'maroua2003'
             }
         }
     }
@@ -35,44 +33,31 @@ publishing {
         }
     }
 }
+
 repositories {
     mavenCentral()
 }
-
 
 dependencies {
     testImplementation 'io.cucumber:cucumber-java:6.0.0'
     testImplementation 'io.cucumber:cucumber-junit:6.0.0'
     testImplementation 'junit:junit:4.12'
-
 }
-
 
 cucumberReports {
     outputDir = file('build/reports/cucumber')
     buildId = '0'
     reports = files('reports/example-report.json')
 }
+
 sonar {
     properties {
-        property "sonar.projectKey", "djabriMaroua_TP_7_OGL"
-        property "sonar.organization", "djabrimaroua"
-        property "sonar.host.url", "https://sonarcloud.io"
+        property "sonar.projectName", "untitled3"
+        property "sonar.host.url", "http://localhost:9000"
+        property "sonar.login", "admin"
+        property "sonar.password", "admin"
     }
 }
-
-jacocoTestReport {
-    reports {
-        xml.required = true
-        csv.required = false
-        html.required = true
-    }
-}
-test {
-    finalizedBy jacocoTestReport
-}
-
-
 
 // SonarQube should still depend on test
 
@@ -110,6 +95,127 @@ slack {
                 value = project.version
                 shortValue = true
             }
+        }
+    }
+}
+pipeline {
+    agent any
+
+    environment {
+        SONAR_HOST_URL = 'http://localhost:9000/'
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                git branch: 'main', url: 'https://github.com/djabriMaroua/TP_7_OGL.git'
+            }
+        }
+
+        stage('Test') {
+            steps {
+                echo 'Running unit tests...'
+                script {
+                    try {
+                        bat './gradlew test'
+                        junit '**/build/test-results/test/*.xml'
+                    } catch (Exception e) {
+                        echo "Test stage failed: ${e.message}"
+                        currentBuild.result = 'FAILURE'
+                        error("Test stage failed")
+                    }
+                }
+            }
+        }
+
+        stage('Code Analysis') {
+            steps {
+                echo 'Running SonarQube analysis...'
+                script {
+                    withSonarQubeEnv('sonar') {
+                        bat './gradlew sonar'
+                    }
+                }
+            }
+        }
+
+        stage('Code Quality') {
+            steps {
+                echo 'Checking SonarQube Quality Gates...'
+                script {
+                    try {
+                        timeout(time: 3, unit: 'MINUTES') {
+                            def qg = waitForQualityGate()
+
+                            if (qg.status != 'OK') {
+                                echo "Quality Gates failed: ${qg.status}"
+                                currentBuild.result = 'UNSTABLE' // Mark as unstable instead of failing
+                                error("Quality Gates failed. Stopping pipeline.")
+                            } else {
+                                echo "Quality Gates passed: ${qg.status}"
+                            }
+                        }
+                    } catch (Exception e) {
+                        echo "Quality Gates check failed: ${e.message}"
+                        currentBuild.result = 'FAILURE'
+                        error("Quality Gates check failed")
+                    }
+                }
+            }
+        }
+
+        stage('Build') {
+            steps {
+                echo 'Building the project...'
+                script {
+                    try {
+                        bat './gradlew build'
+                        archiveArtifacts artifacts: 'build/libs/*.jar', fingerprint: true
+                    } catch (Exception e) {
+                        echo "Build stage failed: ${e.message}"
+                        currentBuild.result = 'FAILURE'
+                        error("Build stage failed")
+                    }
+                }
+            }
+        }
+
+        stage('Deployy') {
+            steps {
+                echo 'Deploying to MyMavenRepo...'
+                bat "./gradlew publish"
+            }
+        }
+
+        stage('Send Notification') {
+            steps {
+                script {
+                    def result = currentBuild.result
+                    if (result == 'SUCCESS') {
+                        mail to: 'lm_djabri@esi.dz',
+                                subject: "Jenkins Build #${env.BUILD_NUMBER} Success",
+                                body: "The build #${env.BUILD_NUMBER} was successful.\n\nCheck it out: ${env.BUILD_URL}"
+                    } else {
+                        mail to: 'lm_djabri@esi.dz',
+                                subject: "Jenkins Build #${env.BUILD_NUMBER} Failure",
+                                body: "The build #${env.BUILD_NUMBER} failed.\n\nCheck it out: ${env.BUILD_URL}"
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            echo 'Pipeline execution finished.'
+        }
+
+        success {
+            echo 'Pipeline succeeded!'
+        }
+
+        failure {
+            echo 'Pipeline failed!'
         }
     }
 }
