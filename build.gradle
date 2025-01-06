@@ -60,7 +60,17 @@ sonar {
 }
 
 // SonarQube should still depend on test
+jacocoTestReport {
+    reports {
+        xml.required = true
+        html.required = true
+    }
+}
 
+test {
+    useJUnitPlatform()
+    finalizedBy jacocoTestReport
+}
 slack {
     publishedPlugin {
         webHook = "https://hooks.slack.com/services/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"
