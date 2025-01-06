@@ -59,7 +59,7 @@ pipeline {
 
 
                      mail(
-                         to: 'lt_amirat@esi.dz',
+                         to: 'lm_djabri@esi.dz',
                          subject: 'Deployment Success - Project Nina ',
                          body: 'The deployment for the project Nina was successful.'
                             )
@@ -73,7 +73,7 @@ pipeline {
                    failure {
                                         // Email Notification for Pipeline Failure
                   mail(
-                    to: 'lt_amirat@esi.dz',
+                    to: 'lm_djabri@esi.dz',
                      subject: 'Pipeline Failed - Project Nina',
                      body: 'The Jenkins pipeline for project Nina has failed. Please check the logs for more details.'
                     )

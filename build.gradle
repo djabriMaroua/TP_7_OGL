@@ -38,7 +38,7 @@ test {
 
 sonarqube {
     properties {
-        property "sonar.projectName", "TP7_nina"  // Nom du projet
+        property "sonar.projectName", "untitled3"  // Nom du projet
         property "sonar.host.url", "http://localhost:9000"  // URL de votre instance SonarQube
         property "sonar.login", "admin"
         property "sonar.password", "admin"
@@ -51,7 +51,7 @@ publishing {
             url = uri('https://mymavenrepo.com/repo/83mgFPDHf3YDWmJwvOIl/')
             credentials {
                 username = 'myMavenRepo'  // Replace with your actual username
-                password = 'thanina' // Replace with your actual password
+                password = 'maroua2003' // Replace with your actual password
             }
         }
     }
