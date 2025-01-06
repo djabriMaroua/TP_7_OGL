@@ -1,28 +1,57 @@
-import com.alessio.slack.model.Message
 
 plugins {
     id 'java'
     id 'jacoco'
     id("com.github.spacialcircumstances.gradle-cucumber-reporting") version "0.1.25"
-    id("io.github.oleksiiparf.slack-webhook") version "1.0.0"
-    id("de.zebrajaeger.sendMail") version "0.2.2"
-    id("org.sonarqube") version "6.0.1.5171"
+    id("org.sonarqube") version "4.4.1.3373"
+    id 'maven-publish'
+}
+jacoco {
+    toolVersion = '0.8.7'
+}
+group = 'org.example'
+version = '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
 }
 
-group = 'com.example'
-version = '1.0'
-apply plugin: 'maven-publish'
+dependencies {
+    testImplementation 'io.cucumber:cucumber-java:6.0.0'
+    testImplementation 'io.cucumber:cucumber-junit:6.0.0'
+    testImplementation 'junit:junit:4.12'
+    implementation 'com.sendgrid:sendgrid-java:4.9.3'
+}
+cucumberReports {
+    outputDir = file('build/reports/cucumber')
+    buildId = '0'
+    reports = files('reports/example-report.json')
+}
 
-group = 'com.my-project'
-version = '0.1-SNAPSHOT'
+test {
+    systemProperty 'cucumber.plugin', 'json:reports/example-report.json'
+}
 
+
+
+
+
+sonarqube {
+    properties {
+        property "sonar.projectName", "TP7_nina"  // Nom du projet
+        property "sonar.host.url", "http://localhost:9000"  // URL de votre instance SonarQube
+        property "sonar.login", "admin"
+        property "sonar.password", "admin"
+
+    }
+}
 publishing {
     repositories {
         maven {
-            url = 'https://mymavenrepo.com/repo/uW1ml5rCuyPDeACXAsO1/'
+            url = uri('https://mymavenrepo.com/repo/83mgFPDHf3YDWmJwvOIl/')
             credentials {
-                username = 'myMavenRepo'
-                password = 'maroua2003'
+                username = 'myMavenRepo'  // Replace with your actual username
+                password = 'thanina' // Replace with your actual password
             }
         }
     }
@@ -33,68 +62,116 @@ publishing {
         }
     }
 }
-
-repositories {
-    mavenCentral()
+task generateJavadoc(type: Javadoc) {
+    source = sourceSets.main.allJava
+    classpath = configurations.compileClasspath
+    destinationDir = file("${buildDir}/docs/javadoc")
 }
 
-dependencies {
-    testImplementation 'io.cucumber:cucumber-java:6.0.0'
-    testImplementation 'io.cucumber:cucumber-junit:6.0.0'
-    testImplementation 'junit:junit:4.12'
-}
 
-cucumberReports {
-    outputDir = file('build/reports/cucumber')
-    buildId = '0'
-    reports = files('reports/example-report.json')
-}
 
-sonar {
-    properties {
-        property "sonar.projectName", "untitled3"
-        property "sonar.host.url", "http://localhost:9000"
-        property "sonar.login", "admin"
-        property "sonar.password", "admin"
-    }
-}
+tasks.test.finalizedBy(tasks.sonarqube)
 
-// SonarQube should still depend on test
 
-slack {
-    publishedPlugin {
-        webHook = "https://hooks.slack.com/services/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"
-        attachment {
-            fallback = "New version successfully published."
-            pretext = "New version successfully published."
-            color = "good"
-            field {
-                title = "Module"
-                value = project.name
-                shortValue = true
-            }
-            field {
-                title = "Version"
-                value = project.version
-                shortValue = true
-            }
-        }
-    }
-    builtSucceed {
-        webHook = "https://hooks.slack.com/services/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"
-        attachment {
-            fallback = "Project successfully built."
-            pretext = "Project successfully built."
-            field {
-                title = "Module"
-                value = project.name
-                shortValue = true
-            }
-            field {
-                title = "Version"
-                value = project.version
-                shortValue = true
-            }
+// Slack notification task
+/*tasks.register('sendSlackNotification') {
+    doLast {
+        def webhookUrl = 'https://hooks.slack.com/services/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'
+        def buildResult = 'SUCCESS'
+        def message = "Build status: ${buildResult}"
+
+        def payload = JsonOutput.toJson([text: message])
+        def connection = new URL(webhookUrl).openConnection() as HttpURLConnection
+        connection.requestMethod = 'POST'
+        connection.doOutput = true
+        connection.setRequestProperty('Content-Type', 'application/json')
+        connection.outputStream.write(payload.bytes)
+
+        if (connection.responseCode == 200) {
+            println "Slack notification sent successfully."
+        } else {
+            println "Failed to send Slack notification. Response: ${connection.responseCode}"
         }
     }
 }
+
+// Javadoc generation task
+tasks.register('generateJavadoc', Javadoc) {
+    source = sourceSets.main.allJava
+    classpath = sourceSets.main.compileClasspath
+    destinationDir = file("$buildDir/reports/javadoc")
+    options {
+        encoding = 'UTF-8'
+        author = true
+        version = true
+    }
+}
+
+
+// Sending email using SendGrid
+tasks.register('sendEmail') {
+    doLast {
+        javaexec {
+            mainClass = 'com.example.service.EmailService'
+            classpath = sourceSets.main.runtimeClasspath
+            args = [
+                    'lw_messikh@esi.dz',
+                    'Deployed Successfully',
+                    'The application has been deployed successfully!'
+            ]
+        }
+    }
+}
+tasks.test {
+    doLast {
+        println 'Running test task'
+    }
+    finalizedBy tasks.jacocoTestReport
+}
+
+tasks.jacocoTestReport {
+    doLast {
+        println 'Generating Jacoco report'
+    }
+    finalizedBy tasks.sonar
+}
+
+tasks.sonar {
+    doLast {
+        println 'Running SonarQube analysis'
+    }
+    finalizedBy tasks.generateJavadoc
+}
+
+tasks.generateJavadoc {
+    doLast {
+        println 'Generating Javadoc'
+    }
+    finalizedBy tasks.publish
+}
+
+tasks.publish {
+    doLast {
+        println 'Publishing artifacts'
+    }
+    finalizedBy tasks.sendSlackNotification, tasks.sendEmail
+}
+
+tasks.sendSlackNotification {
+    doLast {
+        println 'Sending Slack notification'
+    }
+}
+
+tasks.sendEmail {
+    doLast {
+        println 'Sending email'
+    }
+}
+
+tasks.build {
+    dependsOn tasks.test
+    doLast {
+        println 'Building project'
+    }
+}*/
