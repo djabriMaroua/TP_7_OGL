@@ -1,78 +1,61 @@
-import com.alessio.slack.model.Message
-
 plugins {
     id 'java'
     id 'jacoco'
-    id("com.github.spacialcircumstances.gradle-cucumber-reporting") version "0.1.25"
-    id("io.github.oleksiiparf.slack-webhook") version "1.0.0"
-    id("de.zebrajaeger.sendMail") version "0.2.2"
-    id ("org.sonarqube") version "6.0.1.5171"
-
-
+    id 'maven-publish'
+    id 'com.github.spacialcircumstances.gradle-cucumber-reporting' version '0.1.25'
+    id 'io.github.oleksiiparf.slack-webhook' version '1.0.0'
+    id 'de.zebrajaeger.sendMail' version '0.2.2'
+    id 'org.sonarqube' version '4.3.0.3225' // Ensure compatibility with your SonarQube server
 }
-
-group = 'com.example'
-version = '1.0'
-apply plugin: 'maven-publish'
 
 group = 'com.my-project'
 version = '0.1-SNAPSHOT'
 
-
-
 publishing {
     repositories {
         maven {
-            url 'https://mymavenrepo.com/repo/uW1ml5rCuyPDeACXAsO1/'
+            url = uri('https://mymavenrepo.com/repo/uW1ml5rCuyPDeACXAsO1/')
             credentials {
-                username 'myMavenRepo'
-                password 'maroua2003'
+                username = System.getenv('MAVEN_USERNAME') ?: 'defaultUsername'
+                password = System.getenv('MAVEN_PASSWORD') ?: 'defaultPassword'
             }
         }
     }
-
     publications {
         maven(MavenPublication) {
             from components.java
         }
     }
 }
+
 repositories {
     mavenCentral()
 }
-
 
 dependencies {
     testImplementation 'io.cucumber:cucumber-java:6.0.0'
     testImplementation 'io.cucumber:cucumber-junit:6.0.0'
     testImplementation 'junit:junit:4.12'
-
 }
-
 
 cucumberReports {
     outputDir = file('build/reports/cucumber')
-    buildId = '0'
+    buildId = System.getenv('BUILD_ID') ?: 'defaultBuildId'
     reports = files('reports/example-report.json')
 }
-sonar {
+
+sonarqube {
     properties {
         property "sonar.projectName", "untitled3"
-        property "sonar.hosturl", "http://localhost:9000"
-        property "sonar.login", "admin"
-        property "sonar.password", "admin"
-
-
+        property "sonar.host.url", "http://localhost:9000"
+        property "sonar.login", System.getenv('SONAR_LOGIN') ?: 'admin'
+        property "sonar.password", System.getenv('SONAR_PASSWORD') ?: 'admin'
+    }
 }
-
-
-
-
-// SonarQube should still depend on test
 
 slack {
     publishedPlugin {
-        webHook = "https://hooks.slack.com/services/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"
+        webHook = System.getenv('SLACK_WEBHOOK_URL') ?: 'https://default-webhook-url'
         attachment {
             fallback = "New version successfully published."
             pretext = "New version successfully published."
@@ -90,7 +73,7 @@ slack {
         }
     }
     builtSucceed {
-        webHook = "https://hooks.slack.com/services/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"
+        webHook = System.getenv('SLACK_WEBHOOK_URL') ?: 'https://default-webhook-url'
         attachment {
             fallback = "Project successfully built."
             pretext = "Project successfully built."
@@ -107,6 +90,3 @@ slack {
         }
     }
 }
-
-
-
