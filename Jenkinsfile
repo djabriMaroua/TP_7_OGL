@@ -40,60 +40,29 @@ pipeline {
         }
 
         stage('Code Quality') {
-                   steps {
-                       echo 'Checking SonarQube Quality Gates...'
-                       script {
-                           try {
-                               timeout(time: 3, unit: 'MINUTES') {
-                                   // Step 1: Get the task ID from the report-task.txt file
-                                   def reportTaskFile = readFile('.scannerwork/report-task.txt')
-                                   def taskId = reportTaskFile.find(/ceTaskId=(.*)/) { it[1] }
+            steps {
+                echo 'Checking SonarQube Quality Gates...'
+                script {
+                    try {
+                        timeout(time: 3, unit: 'MINUTES') {
+                            def qg = waitForQualityGate()
 
-                                   // Step 2: Call the SonarQube API to check the task status
-                                   def taskStatus = ''
-                                   while (true) {
-                                       def taskResponse = sh(script: "curl -u ${SONAR_AUTH_TOKEN}: '${SONAR_HOST_URL}/api/ce/task?id=${taskId}'", returnStdout: true)
-                                       taskStatus = new groovy.json.JsonSlurper().parseText(taskResponse).task.status
-
-                                       if (taskStatus == 'SUCCESS' || taskStatus == 'FAILED' || taskStatus == 'CANCELED') {
-                                           break
-                                       }
-                                       sleep(time: 5, unit: 'SECONDS') // Wait before checking again
-                                   }
-
-                                   if (taskStatus != 'SUCCESS') {
-                                       error("SonarQube analysis task failed with status: ${taskStatus}")
-                                   }
-
-                                   // Step 3: Call the SonarQube API to check the Quality Gate status
-                                   def qualityGateResponse = sh(script: "curl -u ${SONAR_AUTH_TOKEN}: '${SONAR_HOST_URL}/api/qualitygates/project_status?projectKey=your-project-key'", returnStdout: true)
-                                   def qualityGateStatus = new groovy.json.JsonSlurper().parseText(qualityGateResponse).projectStatus.status
-
-                                   // Step 4: Handle the Quality Gate status
-                                   if (qualityGateStatus == 'OK') {
-                                       echo "Quality Gates passed: ${qualityGateStatus}"
-                                   } else if (qualityGateStatus == 'WARN') {
-                                       echo "Quality Gates warning: ${qualityGateStatus}"
-                                       currentBuild.result = 'UNSTABLE'
-                                   } else if (qualityGateStatus == 'ERROR') {
-                                       echo "Quality Gates failed: ${qualityGateStatus}"
-                                       currentBuild.result = 'FAILURE'
-                                       error("Quality Gates failed. Stopping pipeline.")
-                                   } else {
-                                       echo "Unknown Quality Gate status: ${qualityGateStatus}"
-                                       currentBuild.result = 'FAILURE'
-                                       error("Unknown Quality Gate status. Stopping pipeline.")
-                                   }
-                               }
-                           } catch (Exception e) {
-                               echo "Quality Gates check failed: ${e.message}"
-                               currentBuild.result = 'FAILURE'
-                               error("Quality Gates check failed")
-                           }
-                       }
-                   }
-               }
-
+                            if (qg.status != 'OK') {
+                                echo "Quality Gates failed: ${qg.status}"
+                                currentBuild.result = 'UNSTABLE' // Mark as unstable instead of failing
+                                error("Quality Gates failed. Stopping pipeline.")
+                            } else {
+                                echo "Quality Gates passed: ${qg.status}"
+                            }
+                        }
+                    } catch (Exception e) {
+                        echo "Quality Gates check failed: ${e.message}"
+                        currentBuild.result = 'FAILURE'
+                        error("Quality Gates check failed")
+                    }
+                }
+            }
+        }
 
         stage('Build') {
             steps {
