@@ -40,15 +40,11 @@ pipeline {
                 echo 'Running SonarQube analysis...'
                 script {
 
-                    try {
+
                         withSonarQubeEnv('sonar') {
                                     bat './gradlew sonar --stacktrace'
                                   }
-                    } catch (Exception e) {
-                        echo "SonarQube analysis failed: ${e.message}"
-                        currentBuild.result = 'FAILURE'
-                        error("SonarQube analysis failed")
-                    }
+
                 }
             }
         }
