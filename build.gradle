@@ -1,4 +1,3 @@
-import com.alessio.slack.model.Message
 
 plugins
         {
@@ -8,6 +7,8 @@ plugins
     id("io.github.oleksiiparf.slack-webhook") version "1.0.0"
     id("de.zebrajaeger.sendMail") version "0.2.2"
     id ("org.sonarqube") version "6.0.1.5171"
+
+
 
 
 }
@@ -62,8 +63,11 @@ sonar {
     }
 }
 
+<<<<<<< HEAD
 
  d155497af8443ea49e6f467132b316c7f04f40
+=======
+>>>>>>> 5e385173f8767ac051e39966a9e54bbaca678ba2
 test {
     finalizedBy jacocoTestReport
 }
