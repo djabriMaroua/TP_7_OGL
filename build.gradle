@@ -57,6 +57,7 @@ cucumberReports {
 }
 sonar {
     properties {
+    properties {
         property "sonar.projectName", "untitled3"
         property "sonar.projectKey", "com.my-project:untitled3"
         property "sonar.hosturl", "http://localhost:9000"
