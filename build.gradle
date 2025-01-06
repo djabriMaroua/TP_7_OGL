@@ -57,9 +57,11 @@ cucumberReports {
 }
 sonar {
     properties {
-        property "sonar.projectKey", "djabriMaroua_TP_7_OGL"
-        property "sonar.organization", "djabrimaroua"
-        property "sonar.host.url", "https://sonarcloud.io"
+        property "sonar.projectName", "untitled3"
+        property "sonar.hosturl", "http://localhost:9000"
+        property "sonar.login", "admin"
+        property "sonar.password", "admin"
+
     }
 }
 
