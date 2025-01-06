@@ -1,91 +1,121 @@
 pipeline {
     agent any
 
+    environment {
+        SONAR_HOST_URL = 'http://localhost:9000/'
+    }
+
     stages {
-        stage('Run Tests') {
+        stage('Checkout') {
             steps {
-                bat 'gradlew test'
+                git branch: 'main', url: 'https://github.com/djabriMaroua/TP_7_OGL.git'
             }
         }
-        stage('Generate Cucumber Reports') {
+
+        stage('Test') {
             steps {
-                bat 'gradlew generateCucumberReports'
-            }
-        }
-        stage('SonarQube Analysis') {
-            steps {
-                withSonarQubeEnv('sonar') {
-                    bat 'gradlew sonarqube'
-                }
-            }
-        }
-        stage('Code Quality') {
-            steps {
+                echo 'Running unit tests...'
                 script {
-                    def qualityGate = waitForQualityGate()
-                    if (qualityGate.status != 'OK') {
-                        error "Pipeline failed due to Quality Gate failure: ${qualityGate.status}"
+                    try {
+                        bat './gradlew test'
+                        junit '**/build/test-results/test/*.xml'
+                    } catch (Exception e) {
+                        echo "Test stage failed: ${e.message}"
+                        currentBuild.result = 'FAILURE'
+                        error("Test stage failed")
                     }
                 }
             }
         }
-        stage('Build Jar') {
+
+        stage('Code Analysis') {
             steps {
-                bat 'gradlew build'
+                echo 'Running SonarQube analysis...'
+                script {
+                    withSonarQubeEnv('sonar') {
+                        bat './gradlew sonar'
+                    }
+                }
             }
         }
-        stage('Generate Documentation') {
+
+        stage('Code Quality') {
             steps {
-                bat 'gradlew generateJavadoc'
+                echo 'Checking SonarQube Quality Gates...'
+                script {
+                    try {
+                        timeout(time: 3, unit: 'MINUTES') {
+                            def qg = waitForQualityGate()
+
+                            if (qg.status != 'OK') {
+                                echo "Quality Gates failed: ${qg.status}"
+                                currentBuild.result = 'UNSTABLE' // Mark as unstable instead of failing
+                                error("Quality Gates failed. Stopping pipeline.")
+                            } else {
+                                echo "Quality Gates passed: ${qg.status}"
+                            }
+                        }
+                    } catch (Exception e) {
+                        echo "Quality Gates check failed: ${e.message}"
+                        currentBuild.result = 'FAILURE'
+                        error("Quality Gates check failed")
+                    }
+                }
             }
         }
-        stage('Archive Artifacts') {
+
+        stage('Build') {
             steps {
-                archiveArtifacts artifacts: 'build/libs/*.jar', fingerprint: true
-                archiveArtifacts artifacts: 'build/docs/javadoc/**/*', fingerprint: true
+                echo 'Building the project...'
+                script {
+                    try {
+                        bat './gradlew build'
+                        archiveArtifacts artifacts: 'build/libs/*.jar', fingerprint: true
+                    } catch (Exception e) {
+                        echo "Build stage failed: ${e.message}"
+                        currentBuild.result = 'FAILURE'
+                        error("Build stage failed")
+                    }
+                }
             }
         }
-        stage('Deploy') {
+
+        stage('Deployy') {
+            steps {
+                echo 'Deploying to MyMavenRepo...'
+                bat "./gradlew publish"
+            }
+        }
+
+        stage('Send Notification') {
             steps {
                 script {
-                    bat 'gradlew.bat publish'
+                    def result = currentBuild.result
+                    if (result == 'SUCCESS') {
+                        mail to: 'lm_djabri@esi.dz',
+                             subject: "Jenkins Build #${env.BUILD_NUMBER} Success",
+                             body: "The build #${env.BUILD_NUMBER} was successful.\n\nCheck it out: ${env.BUILD_URL}"
+                    } else {
+                        mail to: 'lm_djabri@esi.dz',
+                             subject: "Jenkins Build #${env.BUILD_NUMBER} Failure",
+                             body: "The build #${env.BUILD_NUMBER} failed.\n\nCheck it out: ${env.BUILD_URL}"
+                    }
                 }
             }
         }
     }
 
     post {
-             success {
+        always {
+            echo 'Pipeline execution finished.'
+        }
 
+        success {
+            echo 'Pipeline succeeded!'
+        }
 
-                     mail(
-                         to: 'lm_djabri@esi.dz',
-                         subject: 'Deployment Success - Project Nina ',
-                         body: 'The deployment for the project Nina was successful.'
-                            )
-                       slackSend(
-                                            channel: '#dev',
-                                             color: 'good',
-                                             message: 'Deployment succeeded for project Thanina-ci-cd!'
-                                            )
-
-                    }
-                   failure {
-                                        // Email Notification for Pipeline Failure
-                  mail(
-                    to: 'lm_djabri@esi.dz',
-                     subject: 'Pipeline Failed - Project Nina',
-                     body: 'The Jenkins pipeline for project Nina has failed. Please check the logs for more details.'
-                    )
-                  slackSend(
-                                                              channel: '#dev',
-                                                               color: 'good',
-                                                               message: 'Deployment failed for project Thanina-ci-cd!'
-                                                              )
-
-
-                  }
-             }
+        failure {
+            echo 'Pipeline failed!'
+        }
+    }
 }
-
-
