@@ -42,7 +42,7 @@ pipeline {
 
 
                        withSonarQubeEnv('sonar') {
-                                          bat './gradlew sonar'
+                                         bat './gradlew sonarqube'
                                       }
 
                 }
