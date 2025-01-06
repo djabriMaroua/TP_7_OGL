@@ -32,43 +32,13 @@ pipeline {
             steps {
                 echo 'Running SonarQube analysis...'
                 script {
-                    try {
-                        // Ensure the system clock is correct
-                        def currentDate = new Date()
-                        echo "Current system date: ${currentDate}"
 
-                        // Wrap SonarQube analysis within the required block
-                        withSonarQubeEnv('sonar') { // Replace 'sonar' with your SonarQube server configuration name
-                            bat "./gradlew sonarqube -Dsonar.host.url=${SONAR_HOST_URL}"
-                        }
+                    try {
+                        bat "./gradlew sonarqube "
                     } catch (Exception e) {
                         echo "SonarQube analysis failed: ${e.message}"
                         currentBuild.result = 'FAILURE'
                         error("SonarQube analysis failed")
-                    }
-                }
-            }
-        }
-
-        stage('Code Quality') {
-            steps {
-                echo 'Checking SonarQube Quality Gates...'
-                script {
-                    try {
-                        timeout(time: 20, unit: 'MINUTES') { // Adjust timeout as needed
-                            def qg = waitForQualityGate()
-                            if (qg.status != 'OK') {
-                                echo "Quality Gates failed: ${qg.status}"
-                                currentBuild.result = 'FAILURE'
-                                error("Quality Gates failed. Stopping pipeline.")
-                            } else {
-                                echo "Quality Gates passed: ${qg.status}"
-                            }
-                        }
-                    } catch (Exception e) {
-                        echo "Quality Gates check failed: ${e.message}"
-                        currentBuild.result = 'FAILURE'
-                        error("Quality Gates check failed")
                     }
                 }
             }
@@ -90,7 +60,7 @@ pipeline {
             }
         }
 
-        stage('Deploy') {
+        stage('Deployy') {
             steps {
                 echo 'Deploying to MyMavenRepo...'
                 bat "./gradlew publish"

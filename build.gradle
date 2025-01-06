@@ -1,6 +1,7 @@
 import com.alessio.slack.model.Message
 
-plugins {
+plugins
+        {
     id 'java'
     id 'jacoco'
     id("com.github.spacialcircumstances.gradle-cucumber-reporting") version "0.1.25"
@@ -60,17 +61,9 @@ sonar {
         property "sonar.host.url", "https://sonarcloud.io"
     }
 }
-<<<<<<< HEAD
 
-jacocoTestReport {
-    reports {
-        xml.required = true
-        csv.required = false
-        html.required = true
-    }
-}
-=======
->>>>>>> d8d155497af8443ea49e6f467132b316c7f04f40
+
+ d155497af8443ea49e6f467132b316c7f04f40
 test {
     finalizedBy jacocoTestReport
 }
