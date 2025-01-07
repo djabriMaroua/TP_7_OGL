@@ -47,6 +47,7 @@ pipeline {
                         timeout(time: 3, unit: 'MINUTES') {
                             def qg = waitForQualityGate()
 
+
                             if (qg.status != 'OK') {
                                 echo "Quality Gates failed: ${qg.status}"
                                 currentBuild.result = 'UNSTABLE' // Mark as unstable instead of failing
