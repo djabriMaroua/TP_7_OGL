@@ -12,44 +12,31 @@ pipeline {
             }
         }
 
-        stage('Test') {
-            steps {
-                echo 'Running unit tests...'
-                script {
-                    try {
-                        bat './gradlew test'
-                        junit '**/build/test-results/test/*.xml'
-                    } catch (Exception e) {
-                        echo "Test stage failed: ${e.message}"
-                        currentBuild.result = 'FAILURE'
-                        error("Test stage failed")
-                    }
-                }
-            }
-        }
-        stage('Generate Cucumber Reports') {
-                    steps {
-                        echo 'Generating Cucumber reports...'
-                        script {
-                            try {
-                                // Générer les rapports Cucumber
-                                bat './gradlew generateCucumberReports'
+       stage('Test') {
+                   steps {
+                       echo 'Running unit tests and generating reports...'
+                       script {
+                           try {
+                               // Étape 1 : Exécuter les tests unitaires
+                               bat './gradlew test'
 
-                                // Archiver les rapports Cucumber générés
-                                archiveArtifacts artifacts: 'build/reports/cucumber/**/*', fingerprint: true
-                            } catch (Exception e) {
-                                echo "Cucumber report generation failed: ${e.message}"
-                                currentBuild.result = 'FAILURE'
-                                error("Cucumber report generation failed")
-                            }
-                        }
-                    }
-                }
-        stage('Generate Cucumber Reports') {
-                    steps {
-                        bat 'gradlew generateCucumberReports'
-                    }
-                }
+                               // Étape 2 : Archiver les résultats des tests unitaires au format JUnit XML
+                               junit '**/build/test-results/test/*.xml'
+
+                               // Étape 3 : Générer les rapports Cucumber
+                               bat './gradlew generateCucumberReports'
+
+                               // Étape 4 : Archiver les rapports Cucumber générés
+                               archiveArtifacts artifacts: 'build/reports/cucumber/**/*', fingerprint: true
+                           } catch (Exception e) {
+                               echo "Test stage failed: ${e.message}"
+                               currentBuild.result = 'FAILURE'
+                               error("Test stage failed")
+                           }
+                       }
+                   }
+               }
+
 
 
 
