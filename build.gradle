@@ -59,7 +59,6 @@ sonar {
     }
 }
 
-// SonarQube should still depend on test
 
 slack {
     publishedPlugin {

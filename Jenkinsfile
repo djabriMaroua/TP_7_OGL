@@ -20,11 +20,11 @@ pipeline {
                               // Étape 1 : Exécuter les tests unitaires
                               bat './gradlew test'
 
-                              // Étape 2 : Archiver les résultats des tests unitaires au format JUnit XML
+                              // Étape 2 : Archiver les résultats des tests unitaires
                               junit '**/build/test-results/test/*.xml'
 
                               // Étape 3 : Générer les rapports Cucumber
-                              bat './gradlew generateCucumberReports'
+                              cucumber '**/reports/*.json'
 
                               // Étape 4 : Archiver les rapports Cucumber générés
                               archiveArtifacts artifacts: 'build/reports/cucumber/**/*', fingerprint: true
@@ -59,7 +59,7 @@ pipeline {
 
                             if (qg.status != 'OK') {
                                 echo "Quality Gates failed: ${qg.status}"
-                                currentBuild.result = 'UNSTABLE' // Mark as unstable instead of failing
+                                currentBuild.result = 'UNSTABLE'
                                 error("Quality Gates failed. Stopping pipeline.")
                             } else {
                                 echo "Quality Gates passed: ${qg.status}"
@@ -89,6 +89,7 @@ pipeline {
                 }
             }
         }
+
 
         stage('Deployy') {
             steps {
