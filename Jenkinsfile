@@ -97,22 +97,36 @@ pipeline {
             }
         }
 
-        stage('Send Notification') {
-            steps {
-                script {
-                    def result = currentBuild.result ?: 'SUCCESS'
-                    if (result == 'SUCCESS') {
-                        mail to: 'lm_djabri@esi.dz',
-                             subject: "Jenkins Build #${env.BUILD_NUMBER} Success",
-                             body: "The build #${env.BUILD_NUMBER} was successful.\n\nCheck it out: ${env.BUILD_URL}"
-                    } else {
-                        mail to: 'lm_djabri@esi.dz',
-                             subject: "Jenkins Build #${env.BUILD_NUMBER} Failure",
-                             body: "The build #${env.BUILD_NUMBER} failed.\n\nCheck it out: ${env.BUILD_URL}"
-                    }
-                }
-            }
-        }
+      stage('Notifications') {
+                  steps {
+                      script {
+                          def result = currentBuild.result ?: 'SUCCESS'
+
+                          // Envoyer une notification par e-mail
+                          if (result == 'SUCCESS') {
+                              mail to: 'lm_djabri@esi.dz',
+                                   subject: "Jenkins Build #${env.BUILD_NUMBER} Success",
+                                   body: "The build #${env.BUILD_NUMBER} was successful.\n\nCheck it out: ${env.BUILD_URL}"
+                          } else {
+                              mail to: 'lm_djabri@esi.dz',
+                                   subject: "Jenkins Build #${env.BUILD_NUMBER} Failure",
+                                   body: "The build #${env.BUILD_NUMBER} failed.\n\nCheck it out: ${env.BUILD_URL}"
+                          }
+
+                          // Envoyer une notification Slack
+                          if (result == 'SUCCESS') {
+                              slackSend channel: '#tpogl',
+                                        color: 'good',
+                                        message: "Build ${env.JOB_NAME} #${env.BUILD_NUMBER} completed successfully."
+                          } else {
+                              slackSend channel: '#tpogl',
+                                        color: 'danger',
+                                        message: "Build ${env.JOB_NAME} #${env.BUILD_NUMBER} failed. Check the logs: ${env.BUILD_URL}"
+                          }
+                      }
+                  }
+              }
+          }
         stage('Slack Notification') {
                              steps {
                                  slackSend channel: '#tpogl',
