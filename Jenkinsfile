@@ -29,6 +29,24 @@ pipeline {
         }
         stage('Generate Cucumber Reports') {
                     steps {
+                        echo 'Generating Cucumber reports...'
+                        script {
+                            try {
+                                // Générer les rapports Cucumber
+                                bat './gradlew generateCucumberReports'
+
+                                // Archiver les rapports Cucumber générés
+                                archiveArtifacts artifacts: 'build/reports/cucumber/**/*', fingerprint: true
+                            } catch (Exception e) {
+                                echo "Cucumber report generation failed: ${e.message}"
+                                currentBuild.result = 'FAILURE'
+                                error("Cucumber report generation failed")
+                            }
+                        }
+                    }
+                }
+        stage('Generate Cucumber Reports') {
+                    steps {
                         bat 'gradlew generateCucumberReports'
                     }
                 }
