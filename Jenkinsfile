@@ -27,6 +27,11 @@ pipeline {
                 }
             }
         }
+        stage('Generate Cucumber Reports') {
+                    steps {
+                        bat 'gradlew generateCucumberReports'
+                    }
+                }
 
         stage('Code Analysis') {
             steps {

@@ -9,7 +9,6 @@ plugins {
     id("org.sonarqube") version "6.0.1.5171"
 }
 
-// Project metadata
 group = 'com.example'
 version = '1.0'
 apply plugin: 'maven-publish'
@@ -45,41 +44,12 @@ dependencies {
     testImplementation 'junit:junit:4.12'
 }
 
-// Task: Run unit tests and archive results
-task runUnitTests {
-    description = 'Runs unit tests and archives the results'
-    group = 'Verification'
-
-    doLast {
-        println '1. Running unit tests...'
-        exec {
-            commandLine './gradlew', 'test'
-        }
-
-        println '2. Archiving unit test results...'
-        copy {
-            from file("build/test-results/test")
-            into file("build/archives/test-results")
-        }
-    }
+cucumberReports {
+    outputDir = file('build/reports/cucumber')
+    buildId = '0'
+    reports = files('reports/example-report.json')
 }
 
-// Task: Generate Cucumber test reports
-task generateCucumberReports {
-    description = 'Generates Cucumber test reports'
-    group = 'Reporting'
-
-    doLast {
-        println '3. Generating Cucumber test reports...'
-        cucumberReports {
-            outputDir = file('build/reports/cucumber')
-            buildId = '0'
-            reports = files('reports/example-report.json')
-        }
-    }
-}
-
-// SonarQube configuration
 sonar {
     properties {
         property "sonar.projectName", "TPUnitsTest"
@@ -89,7 +59,8 @@ sonar {
     }
 }
 
-// Slack notifications
+// SonarQube should still depend on test
+
 slack {
     publishedPlugin {
         webHook = "https://hooks.slack.com/services/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"
@@ -126,10 +97,4 @@ slack {
             }
         }
     }
-}
-
-// Define build lifecycle dependencies
-tasks.build {
-    dependsOn runUnitTests
-    finalizedBy generateCucumberReports
 }
