@@ -53,6 +53,9 @@ public class Matrix {
 	}
 
 	public void setNcols(int ncols) {
+
+
+
 		this.ncols = ncols;
 	}
 
