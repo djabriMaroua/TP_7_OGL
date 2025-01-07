@@ -24,7 +24,7 @@ pipeline {
                               junit '**/build/test-results/test/*.xml'
 
                               // Étape 3 : Générer les rapports Cucumber
-                              cucumber '**/reports/*.json'
+
 
                               // Étape 4 : Archiver les rapports Cucumber générés
                               archiveArtifacts artifacts: 'build/reports/cucumber/**/*', fingerprint: true
