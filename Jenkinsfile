@@ -104,6 +104,13 @@ pipeline {
                 }
             }
         }
+        stage('Slack Notification') {
+                             steps {
+                                 slackSend channel: '#tpogl',
+                                           color: 'good',
+                                           message: "Build ${env.JOB_NAME} #${env.BUILD_NUMBER} completed successfully."
+                             }
+                         }
     }
 
     post {
