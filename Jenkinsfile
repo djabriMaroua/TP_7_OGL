@@ -24,10 +24,10 @@ pipeline {
                               junit '**/build/test-results/test/*.xml'
 
                               // Étape 3 : Générer les rapports Cucumber
-                              cucumber '**/reports/*.json'
+                              bat './gradlew generateCucumberReports'
 
                               // Étape 4 : Archiver les rapports Cucumber générés
-
+                              archiveArtifacts artifacts: 'build/reports/cucumber/**/*', fingerprint: true
                           } catch (Exception e) {
                               echo "Test stage failed: ${e.message}"
                               currentBuild.result = 'FAILURE'
