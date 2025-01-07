@@ -93,6 +93,9 @@ public class Matrix {
 
 
 
+
+
+
 	public Matrix multiplyByConstant(double constant) {
 		Matrix mat = new Matrix(nrows, ncols);
 		for (int i = 0; i < nrows; i++) {
