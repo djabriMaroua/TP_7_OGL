@@ -91,7 +91,7 @@ pipeline {
         stage('Send Notification') {
             steps {
                 script {
-                    def result = currentBuild.result
+                    def result = currentBuild.result ?: 'SUCCESS'
                     if (result == 'SUCCESS') {
                         mail to: 'lm_djabri@esi.dz',
                              subject: "Jenkins Build #${env.BUILD_NUMBER} Success",
