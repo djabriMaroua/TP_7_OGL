@@ -12,33 +12,30 @@ pipeline {
             }
         }
 
-       stage('Test') {
-                   steps {
-                       echo 'Running unit tests and generating reports...'
-                       script {
-                           try {
-                               // Étape 1 : Exécuter les tests unitaires
-                               bat './gradlew test'
+      stage('Test') {
+                  steps {
+                      echo 'Running unit tests and generating reports...'
+                      script {
+                          try {
+                              // Étape 1 : Exécuter les tests unitaires
+                              bat './gradlew test'
 
-                               // Étape 2 : Archiver les résultats des tests unitaires au format JUnit XML
-                               junit '**/build/test-results/test/*.xml'
+                              // Étape 2 : Archiver les résultats des tests unitaires au format JUnit XML
+                              junit '**/build/test-results/test/*.xml'
 
-                               // Étape 3 : Générer les rapports Cucumber
-                               bat './gradlew generateCucumberReports'
+                              // Étape 3 : Générer les rapports Cucumber
+                              bat './gradlew generateCucumberReports'
 
-                               // Étape 4 : Archiver les rapports Cucumber générés
-                               archiveArtifacts artifacts: 'build/reports/cucumber/**/*', fingerprint: true
-                           } catch (Exception e) {
-                               echo "Test stage failed: ${e.message}"
-                               currentBuild.result = 'FAILURE'
-                               error("Test stage failed")
-                           }
-                       }
-                   }
-               }
-
-
-
+                              // Étape 4 : Archiver les rapports Cucumber générés
+                              archiveArtifacts artifacts: 'build/reports/cucumber/**/*', fingerprint: true
+                          } catch (Exception e) {
+                              echo "Test stage failed: ${e.message}"
+                              currentBuild.result = 'FAILURE'
+                              error("Test stage failed")
+                          }
+                      }
+                  }
+              }
 
         stage('Code Analysis') {
             steps {
