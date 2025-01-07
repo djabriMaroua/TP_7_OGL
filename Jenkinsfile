@@ -21,7 +21,7 @@ pipeline {
                               bat './gradlew test'
 
                               // Étape 2 : Archiver les résultats des tests unitaires
-                              junit '**/build/test-results/test/*.xml'
+
 
                               // Étape 3 : Générer les rapports Cucumber
 
